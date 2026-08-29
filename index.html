@@ -13,17 +13,19 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts -->
+        <!-- Google Fonts & Diplomatic Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- html2pdf.js for Client-Side PDF Generation -->
+    <!-- High-Fidelity Client-Side PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
@@ -290,22 +292,21 @@ Thank you, I yield to the Chair.`
                 return () => window.removeEventListener('resize', handleResize);
             }, []);
 
-            useEffect(() => {
+                        useEffect(() => {
                 const recalc = () => {
                     if (autoFitWidth && previewContainerRef.current) {
                         const containerWidth = previewContainerRef.current.clientWidth;
                         const a4DocWidth = 794;
-                        const padding = 24; // p-2 (8px*2) or p-4 (16px*2)
-                        if (containerWidth < a4DocWidth + padding) {
-                            const calculatedScale = Math.max(0.35, (containerWidth - padding) / a4DocWidth);
+                        const availableWidth = containerWidth - (isDesktop ? 36 : 16);
+                        if (availableWidth < a4DocWidth) {
+                            const calculatedScale = Math.max(0.35, availableWidth / a4DocWidth);
                             setPreviewZoom(Number(calculatedScale.toFixed(3)));
                         } else {
                             setPreviewZoom(1);
                         }
                     }
                 };
-                // Slight delay to allow DOM to settle after tab switch
-                const timer = setTimeout(recalc, 50);
+                const timer = setTimeout(recalc, 60);
                 return () => clearTimeout(timer);
             }, [activeTab, autoFitWidth, isDesktop]);
 
@@ -359,79 +360,80 @@ Thank you, I yield to the Chair.`
                 setTimerSeconds(targetDuration);
             };
 
-            const downloadPDF = async () => {
+                        const downloadPDF = async () => {
+                if (isGenerating) return;
                 setIsGenerating(true);
-                showToast('Preparing your A4 brief for download...');
+                showToast("Rendering official high-resolution diplomatic brief...");
 
-                const source = pdfExportRef.current;
-                if (!source) { setIsGenerating(false); return; }
+                try {
+                    if (document.fonts) {
+                        await document.fonts.ready;
+                    }
 
-                // Clone element to body, bypassing ALL parent clipping/scaling containers
-                const clone = source.cloneNode(true);
-                Object.assign(clone.style, {
-                    position:        'absolute',
-                    top:             '-99999px',
-                    left:            '0px',
-                    transform:       'none',
-                    transformOrigin: 'top left',
-                    zIndex:          '-1',
-                    width:           '794px',
-                    height:          '1122px',
-                    overflow:        'hidden',
-                    borderRadius:    '0',
-                    margin:          '0',
-                    boxShadow:       'none',
-                });
-                document.body.appendChild(clone);
+                    const target = document.getElementById("official-a4-brief") || pdfExportRef.current;
+                    if (!target) {
+                        throw new Error("Brief element not found");
+                    }
 
-                // Give browser one frame to paint the clone before capturing
-                await new Promise(r => requestAnimationFrame(() => setTimeout(r, 80)));
+                    const delegateSlug = (delegateName || "Delegate").replace(/\s+/g, "_");
+                    const filename = `Uganda_EchoMUN2026_Diplomatic_Brief_${delegateSlug}.pdf`;
 
-                const delegateSlug = (delegateName || 'Delegate').replace(/\s+/g, '_');
-                const filename = `Uganda_EchoMUN2026_Brief_${delegateSlug}.pdf`;
-
-                const opt = {
-                    margin:   0,
-                    filename: filename,
-                    image:    { type: 'jpeg', quality: 0.98 },
-                    html2canvas: {
-                        scale:           2,
-                        useCORS:         true,
-                        logging:         false,
-                        width:           794,
-                        height:          1122,
-                        windowWidth:     794,
-                        windowHeight:    1122,
-                        scrollX:         0,
-                        scrollY:         0,
-                        backgroundColor: '#ffffff',
-                        allowTaint:      true,
-                    },
-                    jsPDF: {
-                        unit:        'px',
-                        format:      [794, 1122],
-                        orientation: 'portrait',
-                        compress:    true,
-                        hotfixes:    ['px_scaling'],
-                    },
-                };
-
-                html2pdf()
-                    .set(opt)
-                    .from(clone)
-                    .save()
-                    .then(() => {
-                        document.body.removeChild(clone);
-                        setIsGenerating(false);
-                        showToast('PDF downloaded successfully!');
-                    })
-                    .catch((err) => {
-                        console.error('PDF error:', err);
-                        if (document.body.contains(clone)) document.body.removeChild(clone);
-                        setIsGenerating(false);
-                        showToast('PDF failed - opening print dialog...');
-                        window.print();
+                    // Capture at 2.4x scale for crisp, razor-sharp vector-grade print quality
+                    const canvas = await html2canvas(target, {
+                        scale: 2.4,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        backgroundColor: "#ffffff",
+                        width: 794,
+                        height: 1123,
+                        windowWidth: 794,
+                        windowHeight: 1123,
+                        scrollX: 0,
+                        scrollY: 0,
+                        onclone: (clonedDoc) => {
+                            const clonedBrief = clonedDoc.getElementById("official-a4-brief") || clonedDoc.querySelector('[data-pdf-element="true"]');
+                            if (clonedBrief) {
+                                clonedBrief.style.transform = "none";
+                                clonedBrief.style.margin = "0";
+                                clonedBrief.style.boxShadow = "none";
+                                clonedBrief.style.borderRadius = "0";
+                                clonedBrief.style.position = "relative";
+                                clonedBrief.style.top = "0";
+                                clonedBrief.style.left = "0";
+                                clonedBrief.style.display = "flex";
+                            }
+                            const wrapper = clonedDoc.querySelector(".pdf-export-wrapper");
+                            if (wrapper) {
+                                wrapper.style.transform = "none";
+                                wrapper.style.margin = "0";
+                                wrapper.style.padding = "0";
+                            }
+                        }
                     });
+
+                    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Exact standard A4 dimensions: 210mm x 297mm
+                    const pdf = new jsPDF({
+                        orientation: "portrait",
+                        unit: "mm",
+                        format: "a4",
+                        compress: true
+                    });
+
+                    pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+                    pdf.save(filename);
+
+                    setIsGenerating(false);
+                    showToast("Official A4 PDF Brief downloaded successfully!");
+                } catch (err) {
+                    console.error("PDF generation error:", err);
+                    setIsGenerating(false);
+                    showToast("Direct download failed. Opening browser print dialog...");
+                    window.print();
+                }
             };
 
             return (
@@ -993,7 +995,7 @@ Thank you, I yield to the Chair.`
                                         ref={previewContainerRef}
                                         className="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-2 sm:p-4 overflow-x-hidden"
                                         style={{
-                                            height: `${Math.max(480, Math.round(1122 * previewZoom) + 32)}px`
+                                            height: `${Math.max(400, Math.round(1122 * previewZoom) + 24)}px`
                                         }}
                                     >
                                         <div
@@ -1002,7 +1004,7 @@ Thank you, I yield to the Chair.`
                                                 transform: `scale(${previewZoom})`,
                                                 width: '794px',
                                                 transformOrigin: 'top left',
-                                                marginLeft: previewZoom < 1 ? `${Math.max(0, (previewContainerRef.current ? previewContainerRef.current.clientWidth - 16 : 300) * (1 - previewZoom) / 2 / previewZoom * previewZoom)}px` : 'auto',
+                                                marginLeft: `${Math.max(0, ((previewContainerRef.current ? previewContainerRef.current.clientWidth - 24 : 300) - 794 * previewZoom) / 2)}px`,
                                             }}
                                         >
                                             {/* THE OFFICIAL SINGLE-PAGE A4 BRIEFING SHEET */}
@@ -1038,10 +1040,42 @@ Thank you, I yield to the Chair.`
                                                 <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'16px 20px 12px', zIndex:1, minHeight:0, overflow:'hidden' }}>
 
                                                     {/* ── HEADER ── */}
-                                                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', borderBottom:'2.5px solid #0f172a', paddingBottom:'9px', marginBottom:'8px' }}>
-                                                        <div style={{ display:'flex', alignItems:'center', gap:'9px' }}>
-                                                            <div style={{ width:'44px', height:'44px', borderRadius:'50%', border:'2px solid #92400e', background:'linear-gradient(135deg,#fef3c7,#fde68a)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'inset 0 1px 3px rgba(0,0,0,0.15)' }}>
-                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#92400e"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2.5px solid #0f172a', paddingBottom: '9px', marginBottom: '8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            {/* Official Republic of Uganda Flag Badge */}
+                                                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid #B45309', overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.22), 0 0 0 1px rgba(251,191,36,0.3)', background: '#000000' }}>
+                                                                <svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%', display: 'block' }}>
+                                                                    {/* 6 horizontal stripes: black, yellow, red (x2) */}
+                                                                    <rect width="90" height="10" y="0"  fill="#000000" />
+                                                                    <rect width="90" height="10" y="10" fill="#FCDC04" />
+                                                                    <rect width="90" height="10" y="20" fill="#D92323" />
+                                                                    <rect width="90" height="10" y="30" fill="#000000" />
+                                                                    <rect width="90" height="10" y="40" fill="#FCDC04" />
+                                                                    <rect width="90" height="10" y="50" fill="#D92323" />
+                                                                    {/* Central white circle */}
+                                                                    <circle cx="45" cy="30" r="13" fill="#ffffff" stroke="#ffffff" strokeWidth="0.5" />
+                                                                    {/* Grey Crowned Crane */}
+                                                                    <ellipse cx="45" cy="33" rx="5.5" ry="4" fill="#4a4a4a" />
+                                                                    <rect x="43.5" y="25.5" width="3" height="8" rx="1.5" fill="#4a4a4a" />
+                                                                    <circle cx="45" cy="24.5" r="2.8" fill="#4a4a4a" />
+                                                                    <ellipse cx="46.5" cy="25.2" rx="1.1" ry="0.7" fill="#D92323" />
+                                                                    <ellipse cx="43.8" cy="25" rx="0.9" ry="0.6" fill="#ffffff" />
+                                                                    {/* Crown bristles */}
+                                                                    <line x1="44" y1="22" x2="43" y2="19.5" stroke="#FCDC04" strokeWidth="0.8" strokeLinecap="round" />
+                                                                    <line x1="45" y1="21.7" x2="45" y2="19" stroke="#FCDC04" strokeWidth="0.8" strokeLinecap="round" />
+                                                                    <line x1="46" y1="22" x2="47" y2="19.5" stroke="#FCDC04" strokeWidth="0.8" strokeLinecap="round" />
+                                                                    <line x1="44.5" y1="21.8" x2="43.5" y2="19.2" stroke="#FCDC04" strokeWidth="0.6" strokeLinecap="round" />
+                                                                    <line x1="45.5" y1="21.8" x2="46.5" y2="19.2" stroke="#FCDC04" strokeWidth="0.6" strokeLinecap="round" />
+                                                                    {/* Wing */}
+                                                                    <ellipse cx="43" cy="33" rx="3.5" ry="2.5" fill="#666666" transform="rotate(-10 43 33)" />
+                                                                    {/* Legs & Feet */}
+                                                                    <line x1="43.5" y1="37" x2="43" y2="41" stroke="#4a4a4a" strokeWidth="0.8" strokeLinecap="round" />
+                                                                    <line x1="46.5" y1="37" x2="47" y2="41" stroke="#4a4a4a" strokeWidth="0.8" strokeLinecap="round" />
+                                                                    <line x1="43" y1="41" x2="41.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round" />
+                                                                    <line x1="43" y1="41" x2="44.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round" />
+                                                                    <line x1="47" y1="41" x2="45.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round" />
+                                                                    <line x1="47" y1="41" x2="48.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round" />
+                                                                </svg>
                                                             </div>
                                                             <div>
                                                                 <div style={{ fontSize:'7px', fontWeight:700, letterSpacing:'1.8px', textTransform:'uppercase', color:'#92400e', marginBottom:'2px' }}>
