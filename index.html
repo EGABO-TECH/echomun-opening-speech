@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#020617">
+    <title>Uganda Delegation Briefing & PDF Generator | EchoMUN 2026</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- html2pdf.js for Client-Side PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        uganda: {
+                            black: '#000000',
+                            yellow: '#FCDC04',
+                            red: '#D92323',
+                            navy: '#0F172A',
+                            gold: '#B45309',
+                            darkGold: '#854D0E',
+                            cream: '#FEFCE8'
+                        }
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        serifText: ['Merriweather', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    screens: {
+                        'xs': '420px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html, body {
+            overflow-x: hidden;
+        }
+        
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-only {
+                display: block !important;
+            }
+
+            .pdf-export-wrapper {
+                transform: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            .pdf-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 24px !important;
+                border: none !important;
+            }
+        }
+
+        .uganda-flag-stripe {
+            background: linear-gradient(90deg, #000000 0%, #000000 33.3%, #FCDC04 33.3%, #FCDC04 66.6%, #D92323 66.6%, #D92323 100%);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #d97706;
+        }
+
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* PDF preview container — clip to avoid horizontal bleed */
+        .pdf-preview-outer {
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Prompter panel — ensure timer doesn't wrap on narrow */
+        .timer-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Smooth tab transitions */
+        .tab-content-enter {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+        .tab-content-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.2s ease-out;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-amber-500 selection:text-slate-950">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const SPEECH_OPTIONS = {
+            full: {
+                id: 'full',
+                label: '90s Diplomatic Speech',
+                timeEst: '90s',
+                targetWpm: '135 WPM',
+                text: `Honorable Chairs, distinguished fellow delegates:
+
+As we assemble in this chamber to debate the future of our youth, over seven million young Ugandans-and tens of millions more across developing nations-are fighting an invisible war without a single shield. We speak of economic transformation, digital innovation, and sustainable development, yet we routinely ignore the very foundation upon which that future rests: the mental resilience of our young people.
+
+Uganda stands before the Global Youth Forum not to plead for sympathy, but to demand a fundamental shift in diplomatic priority. Systemic stigma, acute shortages of clinical professionals, and economic pressures have pushed youth mental healthcare into the shadows. We cannot afford to wait decades for traditional healthcare infrastructure to catch up while an entire generation breaks under the weight of inaction.
+
+Uganda urges this committee to adopt a decisive, two-tier operational model:
+  Tier 1 (Grassroots Peer-Counseling): Standardizing localized, youth-led peer networks trained in basic psychological first aid to provide immediate, non-stigmatized community care.
+  Tier 2 (Offline-Resilient Digital Networks): Deploying low-bandwidth, zero-rated, and SMS-capable platforms to deliver mental health tools straight to underserved, low-connectivity regions.
+
+Delegates, rhetoric will not heal a generation-structured, scalable mechanisms will. Uganda calls upon every country in this room to move past passive sympathy, sponsor our working paper, and build a resolution that turns youth mental resilience into immediate policy.
+
+Thank you, Honorable Chairs. I yield my remaining time to the Chair.`
+            },
+            compressed: {
+                id: 'compressed',
+                label: '60s Timed Speech',
+                timeEst: '55-60s',
+                targetWpm: '125 WPM',
+                text: `Honorable Chairs, distinguished delegates:
+
+As we debate the future of our youth, over seven million young Ugandans-and millions more across developing nations-are fighting an invisible mental health crisis without a single shield. Systemic stigma and critical clinical shortages leave an entire generation vulnerable. 
+
+Uganda demands a shift from passive sympathy to structural action. We propose a two-tier model: mobilizing youth-led peer counseling networks trained in basic psychological first aid, alongside zero-rated, offline-first digital support platforms for low-connectivity regions. 
+
+Rhetoric will not heal a generation-actionable policy will. Uganda calls upon all delegates to join our bloc, sponsor our working paper, and prioritize youth mental resilience. 
+
+Thank you, I yield my time to the Chair.`
+            },
+            crisp: {
+                id: 'crisp',
+                label: '45s Power Pitch',
+                timeEst: '40-45s',
+                targetWpm: '130 WPM',
+                text: `Honorable Chairs, esteemed delegates:
+
+Over seven million young Ugandans face an invisible mental health emergency without adequate clinical support. Passive sympathy is no longer an acceptable diplomatic response.
+
+Uganda presents a two-tier structural solution: localized youth peer-counseling networks coupled with zero-rated, offline-first mobile mental health access. We urge all delegates to join our coalition, sponsor our working paper, and enact measurable health safeguards today.
+
+Thank you, I yield to the Chair.`
+            }
+        };
+
+        const INITIAL_MOTIONS = [
+            {
+                id: 1,
+                title: "Assessing Infrastructure Gaps & Stigma in Youth Mental Health Systems",
+                type: "Moderated Caucus",
+                totalTime: "10 Mins",
+                speakerTime: "45 Secs",
+                purpose: "Establish baseline consensus on structural barriers in developing nations and low-resource settings."
+            },
+            {
+                id: 2,
+                title: "Implementing Two-Tier Frameworks: Peer Support & Digital Interventions",
+                type: "Moderated Caucus",
+                totalTime: "12 Mins",
+                speakerTime: "60 Secs",
+                purpose: "Detail actionable mechanisms combining offline youth peer networks with zero-rated mobile platforms."
+            },
+            {
+                id: 3,
+                title: "Bloc Building & Operative Drafting for Youth Support Networks",
+                type: "Unmoderated Caucus",
+                totalTime: "15 Mins",
+                speakerTime: "N/A",
+                purpose: "Gather co-sponsors, align regional perspectives, and draft working paper clauses for submission."
+            }
+        ];
+
+        const INITIAL_RESOLUTIONS = [
+            {
+                id: 1,
+                prefix: "Encourages",
+                text: "member states to establish standardized, community-led peer counseling frameworks by training youth leaders in basic psychological first aid and non-clinical crisis management."
+            },
+            {
+                id: 2,
+                prefix: "Calls for",
+                text: "the deployment of zero-rated, offline-first digital mental health tools and SMS-based support pipelines to ensure equitable access in low-connectivity rural regions."
+            },
+            {
+                id: 3,
+                prefix: "Urges",
+                text: "the integration of culturally sensitive mental health literacy and psychosocial awareness modules into secondary and tertiary educational curricula."
+            },
+            {
+                id: 4,
+                prefix: "Recommends",
+                text: "public-private partnerships between national health authorities, telecom providers, and youth NGOs to secure sustainable funding and infrastructure for decentralized care."
+            }
+        ];
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('editor');
+            const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+            const [selectedSpeechKey, setSelectedSpeechKey] = useState('full');
+            const [speechText, setSpeechText] = useState(SPEECH_OPTIONS.full.text);
+            const [delegateName, setDelegateName] = useState('EGABO AARON');
+            const [committeeName, setCommitteeName] = useState('Global Youth Forum (EchoMUN)');
+            const [countryName, setCountryName] = useState('Republic of Uganda');
+            const [topicName, setTopicName] = useState('Youth Mental Health Infrastructure & Digital Resilience');
+            const [motions, setMotions] = useState(INITIAL_MOTIONS);
+            const [resolutions, setResolutions] = useState(INITIAL_RESOLUTIONS);
+
+            const [toastMessage, setToastMessage] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [previewZoom, setPreviewZoom] = useState(1);
+            const [autoFitWidth, setAutoFitWidth] = useState(true);
+
+            const [isTimerRunning, setIsTimerRunning] = useState(false);
+            const [timerSeconds, setTimerSeconds] = useState(90);
+            const [targetDuration, setTargetDuration] = useState(90);
+            const [prompterFontSize, setPrompterFontSize] = useState(24);
+
+            const pdfExportRef = useRef(null);
+            const previewContainerRef = useRef(null);
+
+            useEffect(() => {
+                const handleResize = () => {
+                    const desktop = window.innerWidth >= 1024;
+                    setIsDesktop(desktop);
+                };
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+
+            useEffect(() => {
+                const recalc = () => {
+                    if (autoFitWidth && previewContainerRef.current) {
+                        const containerWidth = previewContainerRef.current.clientWidth;
+                        const a4DocWidth = 794;
+                        const padding = 24; // p-2 (8px*2) or p-4 (16px*2)
+                        if (containerWidth < a4DocWidth + padding) {
+                            const calculatedScale = Math.max(0.35, (containerWidth - padding) / a4DocWidth);
+                            setPreviewZoom(Number(calculatedScale.toFixed(3)));
+                        } else {
+                            setPreviewZoom(1);
+                        }
+                    }
+                };
+                // Slight delay to allow DOM to settle after tab switch
+                const timer = setTimeout(recalc, 50);
+                return () => clearTimeout(timer);
+            }, [activeTab, autoFitWidth, isDesktop]);
+
+            useEffect(() => {
+                let interval = null;
+                if (isTimerRunning && timerSeconds > 0) {
+                    interval = setInterval(() => {
+                        setTimerSeconds((prev) => prev - 1);
+                    }, 1000);
+                } else if (timerSeconds === 0 && isTimerRunning) {
+                    setIsTimerRunning(false);
+                    showToast("Time expired! Yield time to the Chair.");
+                }
+                return () => clearInterval(interval);
+            }, [isTimerRunning, timerSeconds]);
+
+            const handleSpeechTypeChange = (key) => {
+                setSelectedSpeechKey(key);
+                setSpeechText(SPEECH_OPTIONS[key].text);
+                const estSecs = key === 'full' ? 90 : (key === 'compressed' ? 60 : 45);
+                setTargetDuration(estSecs);
+                setTimerSeconds(estSecs);
+                showToast(`Loaded ${SPEECH_OPTIONS[key].label}`);
+            };
+
+            const wordCount = speechText.trim().split(/\s+/).filter(Boolean).length;
+            const estimatedSeconds = Math.round((wordCount / 135) * 60);
+
+            const showToast = (msg) => {
+                setToastMessage(msg);
+                setTimeout(() => setToastMessage(''), 3200);
+            };
+
+            const copyToClipboard = (text, label) => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text);
+                    showToast(`📋 ${label} copied to clipboard!`);
+                } else {
+                    const el = document.createElement('textarea');
+                    el.value = text;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    showToast(`📋 ${label} copied to clipboard!`);
+                }
+            };
+
+            const resetTimer = () => {
+                setIsTimerRunning(false);
+                setTimerSeconds(targetDuration);
+            };
+
+            const downloadPDF = async () => {
+                setIsGenerating(true);
+                showToast('Preparing your A4 brief for download...');
+
+                const source = pdfExportRef.current;
+                if (!source) { setIsGenerating(false); return; }
+
+                // Clone element to body, bypassing ALL parent clipping/scaling containers
+                const clone = source.cloneNode(true);
+                Object.assign(clone.style, {
+                    position:        'absolute',
+                    top:             '-99999px',
+                    left:            '0px',
+                    transform:       'none',
+                    transformOrigin: 'top left',
+                    zIndex:          '-1',
+                    width:           '794px',
+                    height:          '1122px',
+                    overflow:        'hidden',
+                    borderRadius:    '0',
+                    margin:          '0',
+                    boxShadow:       'none',
+                });
+                document.body.appendChild(clone);
+
+                // Give browser one frame to paint the clone before capturing
+                await new Promise(r => requestAnimationFrame(() => setTimeout(r, 80)));
+
+                const delegateSlug = (delegateName || 'Delegate').replace(/\s+/g, '_');
+                const filename = `Uganda_EchoMUN2026_Brief_${delegateSlug}.pdf`;
+
+                const opt = {
+                    margin:   0,
+                    filename: filename,
+                    image:    { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale:           2,
+                        useCORS:         true,
+                        logging:         false,
+                        width:           794,
+                        height:          1122,
+                        windowWidth:     794,
+                        windowHeight:    1122,
+                        scrollX:         0,
+                        scrollY:         0,
+                        backgroundColor: '#ffffff',
+                        allowTaint:      true,
+                    },
+                    jsPDF: {
+                        unit:        'px',
+                        format:      [794, 1122],
+                        orientation: 'portrait',
+                        compress:    true,
+                        hotfixes:    ['px_scaling'],
+                    },
+                };
+
+                html2pdf()
+                    .set(opt)
+                    .from(clone)
+                    .save()
+                    .then(() => {
+                        document.body.removeChild(clone);
+                        setIsGenerating(false);
+                        showToast('PDF downloaded successfully!');
+                    })
+                    .catch((err) => {
+                        console.error('PDF error:', err);
+                        if (document.body.contains(clone)) document.body.removeChild(clone);
+                        setIsGenerating(false);
+                        showToast('PDF failed - opening print dialog...');
+                        window.print();
+                    });
+            };
+
+            return (
+                <div className="min-h-screen min-h-[100dvh] flex flex-col bg-slate-950 text-slate-100">
+                    
+                    {/* Top Global Navigation Bar */}
+                    <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 shadow-xl no-print">
+                        <div className="h-1 uganda-flag-stripe w-full"></div>
+                        
+                        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
+                            
+                            <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 overflow-hidden">
+                                {/* Uganda Flag Badge */}
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full shrink-0 overflow-hidden border-2 border-amber-500/60 shadow-lg" style={{boxShadow:'0 0 0 1px rgba(251,191,36,0.2), 0 2px 8px rgba(0,0,0,0.5)'}}>
+                                    <svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%',display:'block'}}>
+                                        {/* 6 horizontal stripes: black, yellow, red (×2) */}
+                                        <rect width="90" height="10" y="0"  fill="#000000"/>
+                                        <rect width="90" height="10" y="10" fill="#FCDC04"/>
+                                        <rect width="90" height="10" y="20" fill="#D92323"/>
+                                        <rect width="90" height="10" y="30" fill="#000000"/>
+                                        <rect width="90" height="10" y="40" fill="#FCDC04"/>
+                                        <rect width="90" height="10" y="50" fill="#D92323"/>
+                                        {/* Central white circle */}
+                                        <circle cx="45" cy="30" r="13" fill="white" stroke="white" strokeWidth="0.5"/>
+                                        {/* Grey Crowned Crane — simplified */}
+                                        {/* Body */}
+                                        <ellipse cx="45" cy="33" rx="5.5" ry="4" fill="#4a4a4a"/>
+                                        {/* Neck */}
+                                        <rect x="43.5" y="25.5" width="3" height="8" rx="1.5" fill="#4a4a4a"/>
+                                        {/* Head */}
+                                        <circle cx="45" cy="24.5" r="2.8" fill="#4a4a4a"/>
+                                        {/* Red cheek patch */}
+                                        <ellipse cx="46.5" cy="25.2" rx="1.1" ry="0.7" fill="#D92323"/>
+                                        {/* White cheek */}
+                                        <ellipse cx="43.8" cy="25" rx="0.9" ry="0.6" fill="white"/>
+                                        {/* Crown — gold bristles */}
+                                        <line x1="44" y1="22" x2="43" y2="19.5" stroke="#FCDC04" strokeWidth="0.8" strokeLinecap="round"/>
+                                        <line x1="45" y1="21.7" x2="45" y2="19" stroke="#FCDC04" strokeWidth="0.8" strokeLinecap="round"/>
+                                        <line x1="46" y1="22" x2="47" y2="19.5" stroke="#FCDC04" strokeWidth="0.8" strokeLinecap="round"/>
+                                        <line x1="44.5" y1="21.8" x2="43.5" y2="19.2" stroke="#FCDC04" strokeWidth="0.6" strokeLinecap="round"/>
+                                        <line x1="45.5" y1="21.8" x2="46.5" y2="19.2" stroke="#FCDC04" strokeWidth="0.6" strokeLinecap="round"/>
+                                        {/* Wing detail */}
+                                        <ellipse cx="43" cy="33" rx="3.5" ry="2.5" fill="#666" transform="rotate(-10 43 33)"/>
+                                        {/* Legs */}
+                                        <line x1="43.5" y1="37" x2="43" y2="41" stroke="#4a4a4a" strokeWidth="0.8" strokeLinecap="round"/>
+                                        <line x1="46.5" y1="37" x2="47" y2="41" stroke="#4a4a4a" strokeWidth="0.8" strokeLinecap="round"/>
+                                        {/* Feet */}
+                                        <line x1="43" y1="41" x2="41.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round"/>
+                                        <line x1="43" y1="41" x2="44.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round"/>
+                                        <line x1="47" y1="41" x2="45.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round"/>
+                                        <line x1="47" y1="41" x2="48.5" y2="41.8" stroke="#4a4a4a" strokeWidth="0.7" strokeLinecap="round"/>
+                                    </svg>
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 truncate">
+                                        <h1 className="font-cinzel text-sm sm:text-base md:text-lg font-bold tracking-wide text-amber-400 truncate">
+                                            {countryName}
+                                        </h1>
+                                        <span className="text-[10px] font-sans px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-medium border border-slate-700 hidden xs:inline-block shrink-0">
+                                            EchoMUN '26
+                                        </span>
+                                    </div>
+                                    <p className="text-[10px] sm:text-xs text-slate-400 truncate font-sans hidden xs:block">
+                                        {delegateName} • {committeeName}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                <button
+                                    onClick={() => copyToClipboard(speechText, "Speech text")}
+                                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 shadow-sm active:scale-95"
+                                    title="Copy Speech Text"
+                                >
+                                    <i className="fa-regular fa-copy text-amber-400 text-xs"></i>
+                                    <span className="hidden md:inline">Copy Speech</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab(activeTab === 'prompter' ? (isDesktop ? 'editor' : 'preview') : 'prompter')}
+                                    className={`px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 border active:scale-95 ${
+                                        activeTab === 'prompter'
+                                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20 font-bold'
+                                            : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border-slate-700'
+                                    }`}
+                                    title="Open Live Podium Delivery Mode"
+                                >
+                                    <i className="fa-solid fa-microphone-lines text-xs"></i>
+                                    <span className="hidden sm:inline">Podium Mode</span>
+                                </button>
+
+                                <button
+                                    onClick={downloadPDF}
+                                    disabled={isGenerating}
+                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg transition-all shadow-md hover:shadow-amber-500/25 flex items-center gap-1.5 font-sans disabled:opacity-50 active:scale-95 cursor-pointer"
+                                    title="Export Official 1-Page A4 PDF Brief"
+                                >
+                                    {isGenerating ? (
+                                        <i className="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                                    ) : (
+                                        <i className="fa-solid fa-file-pdf text-xs sm:text-sm"></i>
+                                    )}
+                                    <span className="hidden xs:inline">Download PDF</span>
+                                    <span className="inline xs:hidden">PDF</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mobile Segmented Tab Switcher */}
+                        <div className="lg:hidden border-t border-slate-800/80 bg-slate-900/90 px-1.5 py-1.5">
+                            <div className="grid grid-cols-4 gap-1 w-full">
+                                <button
+                                    onClick={() => setActiveTab('editor')}
+                                    className={`py-1.5 rounded-lg text-xs font-medium flex flex-col items-center gap-0.5 transition-all w-full ${
+                                        activeTab === 'editor'
+                                            ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-pen-to-square text-sm"></i>
+                                    <span className="text-[10px] leading-tight">Editor</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('preview')}
+                                    className={`py-1.5 rounded-lg text-xs font-medium flex flex-col items-center gap-0.5 transition-all w-full ${
+                                        activeTab === 'preview'
+                                            ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-file-lines text-sm"></i>
+                                    <span className="text-[10px] leading-tight">Preview</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('prompter')}
+                                    className={`py-1.5 rounded-lg text-xs font-medium flex flex-col items-center gap-0.5 transition-all w-full ${
+                                        activeTab === 'prompter'
+                                            ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-microphone-lines text-sm"></i>
+                                    <span className="text-[10px] leading-tight">Podium</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('caucus')}
+                                    className={`py-1.5 rounded-lg text-xs font-medium flex flex-col items-center gap-0.5 transition-all w-full ${
+                                        activeTab === 'caucus'
+                                            ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-gavel text-sm"></i>
+                                    <span className="text-[10px] leading-tight">Motions</span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Toast Notification Alert */}
+                    {toastMessage && (
+                        <div className="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-6 z-50 bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl shadow-2xl font-bold text-xs sm:text-sm flex items-center justify-between sm:justify-start gap-2 animate-bounce border border-amber-300">
+                            <div className="flex items-center gap-2">
+                                <i className="fa-solid fa-circle-check text-slate-950"></i>
+                                <span>{toastMessage}</span>
+                            </div>
+                            <button onClick={() => setToastMessage('')} className="text-slate-950 hover:opacity-75">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* MAIN APPLICATION WORKSPACE */}
+                    <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 lg:pb-6 flex-1 w-full">
+                        
+                        {/* ========================================================================= */}
+                        {/* MODE 1: LIVE PODIUM PROMPTER VIEW                                        */}
+                        {/* ========================================================================= */}
+                        {activeTab === 'prompter' ? (
+                            <div className="space-y-4 max-w-4xl mx-auto">
+                                
+                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl sticky top-16 z-30 backdrop-blur-md space-y-3">
+
+                                    {/* Row 1: Speech preset selector */}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        {Object.keys(SPEECH_OPTIONS).map((key) => (
+                                            <button
+                                                key={key}
+                                                onClick={() => handleSpeechTypeChange(key)}
+                                                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border flex-1 sm:flex-none text-center ${
+                                                    selectedSpeechKey === key
+                                                        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-bold'
+                                                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                                                }`}
+                                            >
+                                                {SPEECH_OPTIONS[key].label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Row 2: Timer + controls + font size */}
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+
+                                        <div className={`px-4 py-2 rounded-xl font-mono text-2xl sm:text-3xl font-black tracking-wider border ${
+                                            timerSeconds <= 10 && timerSeconds > 0
+                                                ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse'
+                                                : timerSeconds === 0
+                                                ? 'bg-red-600 text-white border-red-500'
+                                                : 'bg-slate-950 text-amber-400 border-slate-800'
+                                        }`}>
+                                            {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                onClick={() => setIsTimerRunning(!isTimerRunning)}
+                                                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-base transition-transform active:scale-95 shadow-md ${
+                                                    isTimerRunning
+                                                        ? 'bg-amber-500 text-slate-950 hover:bg-amber-400'
+                                                        : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+                                                }`}
+                                                title={isTimerRunning ? "Pause Timer" : "Start Speech Timer"}
+                                            >
+                                                <i className={`fa-solid ${isTimerRunning ? 'fa-pause' : 'fa-play'}`}></i>
+                                            </button>
+
+                                            <button
+                                                onClick={resetTimer}
+                                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center justify-center text-sm transition-colors active:scale-95"
+                                                title="Reset Timer"
+                                            >
+                                                <i className="fa-solid fa-rotate-left"></i>
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl ml-auto sm:ml-0">
+                                            <span className="text-xs text-slate-400 font-mono">Size:</span>
+                                            <button
+                                                onClick={() => setPrompterFontSize(Math.max(16, prompterFontSize - 2))}
+                                                className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold"
+                                            >
+                                                A-
+                                            </button>
+                                            <span className="text-xs font-mono font-bold text-amber-400">{prompterFontSize}px</span>
+                                            <button
+                                                onClick={() => setPrompterFontSize(Math.min(40, prompterFontSize + 2))}
+                                                className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold"
+                                            >
+                                                A+
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar */}
+                                    <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                                        <div
+                                            className={`h-full transition-all duration-1000 rounded-full ${
+                                                timerSeconds <= 15 ? 'bg-red-500' : 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                                            }`}
+                                            style={{ width: `${Math.max(0, (timerSeconds / targetDuration) * 100)}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-2xl leading-relaxed text-slate-100 font-serif">
+                                    <div className="mb-4 pb-3 border-b border-slate-800 flex flex-wrap justify-between items-center text-xs text-slate-400 font-sans">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                            <span className="font-bold text-slate-200 uppercase tracking-wide">Live Podium Teleprompter</span>
+                                        </div>
+                                        <div className="font-mono text-amber-400">
+                                            {wordCount} words • Target: ~135 WPM ({estimatedSeconds}s)
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        style={{ fontSize: `${prompterFontSize}px`, lineHeight: 1.6 }}
+                                        className="whitespace-pre-line text-slate-100 space-y-4 tracking-normal"
+                                    >
+                                        {speechText}
+                                    </div>
+
+                                    <div className="mt-8 pt-4 border-t border-slate-800/80 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs font-sans text-amber-200 flex items-start gap-3">
+                                        <i className="fa-solid fa-circle-info text-amber-400 text-base mt-0.5"></i>
+                                        <div>
+                                            <strong className="text-amber-300 font-bold block mb-0.5">Diplomatic Oratory Tip:</strong>
+                                            Speak with deliberate pacing. Project your voice on the opening line, pause for 1 second after <em>"...without a single shield."</em>, and make direct eye contact with the dais when delivering the two-tier resolution proposal.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                                
+                                {/* LEFT COLUMN: Interactive Editors & Delegation Config */}
+                                <section className={`space-y-6 no-print ${
+                                    isDesktop || activeTab === 'editor' ? 'block lg:col-span-5' : 'hidden'
+                                }`}>
+                                    
+                                    {/* Delegation Parameters Card */}
+                                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+                                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                            <h2 className="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wider font-cinzel flex items-center gap-2">
+                                                <i className="fa-solid fa-id-card"></i> Delegation Parameters
+                                            </h2>
+                                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono border border-slate-700">
+                                                Live Sync
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                            <div>
+                                                <label className="block text-slate-400 mb-1 font-medium">Delegation / Country</label>
+                                                <input
+                                                    type="text"
+                                                    value={countryName}
+                                                    onChange={(e) => setCountryName(e.target.value)}
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-slate-400 mb-1 font-medium">Delegate Full Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={delegateName}
+                                                    onChange={(e) => setDelegateName(e.target.value)}
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                                                />
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-slate-400 mb-1 font-medium">Committee & Forum</label>
+                                                <input
+                                                    type="text"
+                                                    value={committeeName}
+                                                    onChange={(e) => setCommitteeName(e.target.value)}
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                                                />
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-slate-400 mb-1 font-medium">Agenda / Policy Topic</label>
+                                                <input
+                                                    type="text"
+                                                    value={topicName}
+                                                    onChange={(e) => setTopicName(e.target.value)}
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Speech Presets & Realtime Script Editor */}
+                                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+                                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                            <h2 className="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wider font-cinzel flex items-center gap-2">
+                                                <i className="fa-solid fa-microphone-lines"></i> Opening Speech Studio
+                                            </h2>
+                                            <span className="text-[11px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-mono border border-slate-700 font-bold">
+                                                ~{estimatedSeconds}s delivery
+                                            </span>
+                                        </div>
+
+                                        {/* Preset Selectors */}
+                                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                                            {Object.keys(SPEECH_OPTIONS).map((key) => {
+                                                const opt = SPEECH_OPTIONS[key];
+                                                const isSelected = selectedSpeechKey === key;
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        onClick={() => handleSpeechTypeChange(key)}
+                                                        className={`p-2 sm:p-2.5 rounded-xl text-left transition-all border text-xs flex flex-col justify-between active:scale-95 ${
+                                                            isSelected
+                                                                ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold shadow-sm'
+                                                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                                                        }`}
+                                                    >
+                                                        <div className="font-bold text-slate-200 text-[11px] leading-tight mb-1">{opt.label}</div>
+                                                        <div className="text-[9.5px] opacity-75 font-mono text-amber-400">{opt.timeEst}</div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Live Text Area */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <label className="text-xs text-slate-400 font-medium">Opening Statement Script</label>
+                                                <div className="text-[11px] text-slate-400 font-mono">
+                                                    <span className="text-amber-400 font-bold">{wordCount}</span> words | 135 WPM
+                                                </div>
+                                            </div>
+                                            <textarea
+                                                value={speechText}
+                                                onChange={(e) => setSpeechText(e.target.value)}
+                                                rows={9}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-200 font-serif leading-relaxed focus:outline-none focus:border-amber-500 transition-colors custom-scrollbar"
+                                                placeholder="Write your opening speech statement here..."
+                                            ></textarea>
+                                        </div>
+
+                                        {/* Prompter Launch Button */}
+                                        <div className="pt-1 flex justify-end">
+                                            <button
+                                                onClick={() => setActiveTab('prompter')}
+                                                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95"
+                                            >
+                                                <i className="fa-solid fa-microphone-lines"></i>
+                                                <span>Practice in Live Podium Prompter</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Caucus Motions Accordion */}
+                                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+                                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                            <h2 className="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wider font-cinzel flex items-center gap-2">
+                                                <i className="fa-solid fa-gavel"></i> Strategic Motions
+                                            </h2>
+                                            <span className="text-[10px] text-slate-400 font-mono">
+                                                {motions.length} Motions Loaded
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {motions.map((m, idx) => (
+                                                <div key={m.id} className="p-3 bg-slate-950 border border-slate-800/90 rounded-xl text-xs space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-amber-400 font-mono">Motion #{idx + 1}</span>
+                                                        <button
+                                                            onClick={() => copyToClipboard(`Motion for a ${m.type} of ${m.totalTime} with a ${m.speakerTime} individual speaking time on the topic: "${m.title}"`, `Motion ${idx + 1}`)}
+                                                            className="text-slate-400 hover:text-amber-400 text-[11px] flex items-center gap-1 font-sans"
+                                                            title="Copy Motion Script"
+                                                        >
+                                                            <i className="fa-regular fa-copy"></i> Copy
+                                                        </button>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        value={m.title}
+                                                        onChange={(e) => {
+                                                            const newM = [...motions];
+                                                            newM[idx].title = e.target.value;
+                                                            setMotions(newM);
+                                                        }}
+                                                        className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                                                        placeholder="Motion Title"
+                                                    />
+                                                    <div className="grid grid-cols-3 gap-2 text-[11px]">
+                                                        <input
+                                                            type="text"
+                                                            value={m.type}
+                                                            onChange={(e) => {
+                                                                const newM = [...motions];
+                                                                newM[idx].type = e.target.value;
+                                                                setMotions(newM);
+                                                            }}
+                                                            className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-amber-500"
+                                                            placeholder="Type"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            value={m.totalTime}
+                                                            onChange={(e) => {
+                                                                const newM = [...motions];
+                                                                newM[idx].totalTime = e.target.value;
+                                                                setMotions(newM);
+                                                            }}
+                                                            className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-amber-500"
+                                                            placeholder="Total"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            value={m.speakerTime}
+                                                            onChange={(e) => {
+                                                                const newM = [...motions];
+                                                                newM[idx].speakerTime = e.target.value;
+                                                                setMotions(newM);
+                                                            }}
+                                                            className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-amber-500"
+                                                            placeholder="Speaker"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* RIGHT COLUMN: OFFICIAL SINGLE-PAGE A4 PDF PREVIEW DOCUMENT */}
+                                <section className={`space-y-4 ${
+                                    isDesktop || activeTab === 'preview' ? 'block lg:col-span-7' : 'hidden'
+                                }`}>
+                                    
+                                    {/* Preview Toolbar */}
+                                    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-md no-print">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-200 font-cinzel">
+                                                A4 Diplomatic Brief Preview
+                                            </span>
+                                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono hidden sm:inline-block">
+                                                Single Page 210×297mm
+                                            </span>
+                                        </div>
+
+                                        {/* Zoom Controls */}
+                                        <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
+                                            <button
+                                                onClick={() => {
+                                                    setAutoFitWidth(false);
+                                                    setPreviewZoom((z) => Math.max(0.4, Number((z - 0.1).toFixed(2))));
+                                                }}
+                                                className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold"
+                                                title="Zoom Out"
+                                            >
+                                                <i className="fa-solid fa-minus text-[10px]"></i>
+                                            </button>
+                                            
+                                            <span className="px-2 font-mono text-[11px] text-amber-400 font-bold">
+                                                {Math.round(previewZoom * 100)}%
+                                            </span>
+
+                                            <button
+                                                onClick={() => {
+                                                    setAutoFitWidth(false);
+                                                    setPreviewZoom((z) => Math.min(1.4, Number((z + 0.1).toFixed(2))));
+                                                }}
+                                                className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold"
+                                                title="Zoom In"
+                                            >
+                                                <i className="fa-solid fa-plus text-[10px]"></i>
+                                            </button>
+
+                                            <button
+                                                onClick={() => {
+                                                    const newFit = !autoFitWidth;
+                                                    setAutoFitWidth(newFit);
+                                                    if (newFit && previewContainerRef.current) {
+                                                        const containerWidth = previewContainerRef.current.clientWidth;
+                                                        const scale = containerWidth < 818 ? Math.max(0.35, (containerWidth - 24) / 794) : 1;
+                                                        setPreviewZoom(Number(scale.toFixed(3)));
+                                                    }
+                                                }}
+                                                className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
+                                                    autoFitWidth ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-400'
+                                                }`}
+                                            >
+                                                Fit
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Document Preview Scroller */}
+                                    <div
+                                        ref={previewContainerRef}
+                                        className="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-2 sm:p-4 overflow-x-hidden"
+                                        style={{
+                                            height: `${Math.max(480, Math.round(1122 * previewZoom) + 32)}px`
+                                        }}
+                                    >
+                                        <div
+                                            className="pdf-export-wrapper transition-transform duration-200 origin-top-left"
+                                            style={{
+                                                transform: `scale(${previewZoom})`,
+                                                width: '794px',
+                                                transformOrigin: 'top left',
+                                                marginLeft: previewZoom < 1 ? `${Math.max(0, (previewContainerRef.current ? previewContainerRef.current.clientWidth - 16 : 300) * (1 - previewZoom) / 2 / previewZoom * previewZoom)}px` : 'auto',
+                                            }}
+                                        >
+                                            {/* THE OFFICIAL SINGLE-PAGE A4 BRIEFING SHEET */}
+                                            <div
+                                                ref={pdfExportRef}
+                                                style={{
+                                                    background: '#ffffff',
+                                                    width: '794px',
+                                                    height: '1122px',
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    boxShadow: '0 4px 40px rgba(0,0,0,0.35)',
+                                                    borderRadius: '4px',
+                                                    flexShrink: 0,
+                                                    userSelect: 'text',
+                                                }}
+                                            >
+                                                {/* Uganda Flag Top Bar */}
+                                                <div style={{ height: '8px', background: 'linear-gradient(90deg,#000 33.3%,#FCDC04 33.3% 66.6%,#D92323 66.6%)', flexShrink: 0 }} />
+
+                                                {/* Watermark */}
+                                                <div style={{
+                                                    position:'absolute', top:'50%', left:'50%',
+                                                    transform:'translate(-50%,-50%) rotate(-35deg)',
+                                                    fontSize:'108px', fontWeight:900, color:'rgba(15,23,42,0.04)',
+                                                    fontFamily:"'Cinzel',serif", letterSpacing:'-4px',
+                                                    userSelect:'none', pointerEvents:'none', whiteSpace:'nowrap', zIndex:0
+                                                }}>ECHOMUN 2026</div>
+
+                                                {/* Inner Content */}
+                                                <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'16px 20px 12px', zIndex:1, minHeight:0, overflow:'hidden' }}>
+
+                                                    {/* ── HEADER ── */}
+                                                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', borderBottom:'2.5px solid #0f172a', paddingBottom:'9px', marginBottom:'8px' }}>
+                                                        <div style={{ display:'flex', alignItems:'center', gap:'9px' }}>
+                                                            <div style={{ width:'44px', height:'44px', borderRadius:'50%', border:'2px solid #92400e', background:'linear-gradient(135deg,#fef3c7,#fde68a)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'inset 0 1px 3px rgba(0,0,0,0.15)' }}>
+                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#92400e"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontSize:'7px', fontWeight:700, letterSpacing:'1.8px', textTransform:'uppercase', color:'#92400e', marginBottom:'2px' }}>
+                                                                    Official Mission Policy Document &nbsp;·&nbsp; <span style={{ fontFamily:'monospace', color:'#64748b', fontWeight:400 }}>REF: EchoMUN-GYF-2026-UG</span>
+                                                                </div>
+                                                                <div style={{ fontSize:'19px', fontWeight:900, fontFamily:"'Cinzel',serif", letterSpacing:'-0.5px', lineHeight:1.05, textTransform:'uppercase', color:'#0f172a' }}>{countryName}</div>
+                                                                <div style={{ fontSize:'8.5px', color:'#475569', fontWeight:500, marginTop:'2px' }}>{committeeName} &nbsp;·&nbsp; Executive Policy Briefing Sheet</div>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ textAlign:'right', display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'4px' }}>
+                                                            <div style={{ background:'#0f172a', color:'#fbbf24', fontSize:'8.5px', fontWeight:700, fontFamily:"'Cinzel',serif", padding:'3px 8px', borderRadius:'4px', letterSpacing:'1px' }}>EchoMUN 2026</div>
+                                                            <div style={{ fontSize:'9px', fontWeight:700, color:'#0f172a' }}>Delegate: <span style={{ color:'#92400e', textDecoration:'underline', textDecorationColor:'#fbbf24' }}>{delegateName}</span></div>
+                                                            <div style={{ fontSize:'7px', color:'#94a3b8' }}>Republic of Uganda</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* ── TOPIC BANNER ── */}
+                                                    <div style={{ background:'#0f172a', color:'#f1f5f9', borderLeft:'4px solid #f59e0b', padding:'5px 10px', borderRadius:'4px', display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'9px', fontSize:'8px' }}>
+                                                        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                                                            <span style={{ color:'#fbbf24', fontWeight:700, fontFamily:'monospace', letterSpacing:'1px' }}>&#9872; POLICY TOPIC:</span>
+                                                            <span style={{ fontWeight:600, color:'#e2e8f0' }}>{topicName}</span>
+                                                        </div>
+                                                        <div style={{ fontFamily:'monospace', fontSize:'7px', background:'#1e293b', color:'#94a3b8', padding:'2px 7px', borderRadius:'3px', border:'1px solid #334155', flexShrink:0 }}>PUBLIC DIPLOMATIC BRIEF</div>
+                                                    </div>
+
+                                                    {/* ── TWO-COLUMN BODY ── */}
+                                                    <div style={{ display:'grid', gridTemplateColumns:'1fr 186px', gap:'12px', flex:1, minHeight:0, overflow:'hidden' }}>
+
+                                                        {/* LEFT: Opening Statement */}
+                                                        <div style={{ display:'flex', flexDirection:'column', gap:'7px', borderRight:'1px solid #e2e8f0', paddingRight:'12px', overflow:'hidden' }}>
+                                                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'#f8fafc', borderLeft:'3px solid #d97706', padding:'4px 8px', borderRadius:'3px' }}>
+                                                                <span style={{ fontSize:'8px', fontWeight:800, fontFamily:"'Cinzel',serif", textTransform:'uppercase', letterSpacing:'0.8px', color:'#0f172a', display:'flex', alignItems:'center', gap:'5px' }}>
+                                                                    <span style={{ color:'#d97706' }}>&#128226;</span> Executive Opening Statement
+                                                                </span>
+                                                                <span style={{ fontSize:'7px', fontFamily:'monospace', fontWeight:700, background:'#fef3c7', color:'#92400e', padding:'2px 5px', borderRadius:'3px', border:'1px solid #fcd34d', flexShrink:0 }}>~{estimatedSeconds}s · {wordCount}w</span>
+                                                            </div>
+                                                            <div style={{ fontSize:'8.5px', fontFamily:"'Merriweather',serif", lineHeight:1.65, color:'#1e293b', whiteSpace:'pre-wrap', wordBreak:'break-word', borderLeft:'2px solid rgba(245,158,11,0.35)', paddingLeft:'8px', flex:1, overflow:'hidden' }}>
+                                                                {speechText}
+                                                            </div>
+                                                            <div style={{ background:'#fffbeb', border:'1px solid #fde68a', borderRadius:'4px', padding:'5px 8px', fontSize:'7.5px', color:'#78350f', flexShrink:0 }}>
+                                                                <div style={{ fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', fontSize:'6.5px', marginBottom:'2px' }}>&#127908; Oratory Delivery Protocol</div>
+                                                                <span style={{ fontStyle:'italic', color:'#92400e', lineHeight:1.45 }}>Deliver with firm cadence. Pause after <strong>"...without a single shield."</strong> Maintain eye contact with the dais during the two-tier operational model.</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* RIGHT: Motions + Resolutions + Alliances */}
+                                                        <div style={{ display:'flex', flexDirection:'column', gap:'7px', overflow:'hidden' }}>
+
+                                                            {/* Motions */}
+                                                            <div style={{ flexShrink:0 }}>
+                                                                <div style={{ background:'#f8fafc', borderLeft:'3px solid #0f172a', padding:'4px 8px', borderRadius:'3px', marginBottom:'4px' }}>
+                                                                    <span style={{ fontSize:'7.5px', fontWeight:800, fontFamily:"'Cinzel',serif", textTransform:'uppercase', letterSpacing:'0.8px', color:'#0f172a' }}>&#9878; Strategic Motions</span>
+                                                                </div>
+                                                                <div style={{ display:'flex', flexDirection:'column', gap:'3px' }}>
+                                                                    {motions.map((m, idx) => (
+                                                                        <div key={m.id} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'3px', padding:'4px 6px', fontSize:'7px' }}>
+                                                                            <div style={{ display:'flex', justifyContent:'space-between', fontWeight:700, marginBottom:'2px' }}>
+                                                                                <span style={{ color:'#92400e', fontFamily:'monospace' }}>M{idx+1}. {m.type}</span>
+                                                                                <span style={{ background:'#e2e8f0', color:'#475569', padding:'0 3px', borderRadius:'2px', fontFamily:'monospace' }}>{m.totalTime}</span>
+                                                                            </div>
+                                                                            <div style={{ fontWeight:600, color:'#1e293b', lineHeight:1.3, marginBottom:'1px' }}>&#8220;{m.title}&#8221;</div>
+                                                                            <div style={{ color:'#64748b', lineHeight:1.25, fontSize:'6.5px' }}><strong>Aim:</strong> {m.purpose}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Resolutions */}
+                                                            <div style={{ flexShrink:0 }}>
+                                                                <div style={{ background:'#f8fafc', borderLeft:'3px solid #dc2626', padding:'4px 8px', borderRadius:'3px', marginBottom:'4px' }}>
+                                                                    <span style={{ fontSize:'7.5px', fontWeight:800, fontFamily:"'Cinzel',serif", textTransform:'uppercase', letterSpacing:'0.8px', color:'#0f172a' }}>&#128221; Draft Operatives</span>
+                                                                </div>
+                                                                <div style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'3px', padding:'5px 6px', display:'flex', flexDirection:'column', gap:'4px' }}>
+                                                                    {resolutions.map((r, i) => (
+                                                                        <div key={r.id} style={{ display:'flex', gap:'4px', fontSize:'7px', lineHeight:1.4, color:'#1e293b' }}>
+                                                                            <span style={{ fontWeight:700, color:'#92400e', fontFamily:'monospace', flexShrink:0 }}>{i+1}.</span>
+                                                                            <p style={{ margin:0 }}><em style={{ textDecoration:'underline', textDecorationColor:'#fbbf24', fontWeight:700, fontStyle:'italic', color:'#0f172a' }}>{r.prefix}</em>{' '}{r.text}</p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Alliances */}
+                                                            <div style={{ background:'#fffbeb', border:'1px solid #fde68a', borderRadius:'4px', padding:'5px 7px', fontSize:'7px', color:'#78350f', flexShrink:0 }}>
+                                                                <div style={{ fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', fontSize:'6.5px', marginBottom:'2px' }}>&#129309; Caucus Alliances</div>
+                                                                <p style={{ margin:0, lineHeight:1.4, color:'#475569' }}>Align with Non-Aligned Movement (NAM), African Union delegates, and low-resource digital health advocates for co-sponsorship.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* ── FOOTER ── */}
+                                                    <div style={{ marginTop:'9px', paddingTop:'7px', borderTop:'2px solid #0f172a', display:'flex', justifyContent:'space-between', alignItems:'flex-end', fontSize:'7px', color:'#64748b', fontFamily:'monospace', flexShrink:0 }}>
+                                                        <div>
+                                                            <div style={{ fontWeight:700, color:'#0f172a', fontSize:'7.5px' }}>DELEGATION OF THE REPUBLIC OF UGANDA</div>
+                                                            <div style={{ color:'#94a3b8' }}>GLOBAL YOUTH FORUM (ECHOMUN 2026) · OFFICIAL BRIEF</div>
+                                                        </div>
+                                                        <div style={{ textAlign:'center', borderTop:'1px solid #cbd5e1', paddingTop:'3px' }}>
+                                                            <div style={{ fontFamily:'serif', fontStyle:'italic', fontWeight:700, color:'#0f172a', fontSize:'9px' }}>{delegateName}</div>
+                                                            <div style={{ fontSize:'6px', color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.8px' }}>Authorized Delegate Signature</div>
+                                                        </div>
+                                                        <div style={{ textAlign:'right' }}>
+                                                            <div style={{ fontWeight:700, color:'#1e293b', fontSize:'7.5px' }}>PAGE 1 OF 1</div>
+                                                            <div style={{ color:'#92400e', fontWeight:700 }}>VERIFIED DRAFT</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Uganda Flag Bottom Bar */}
+                                                <div style={{ height:'5px', background:'linear-gradient(90deg,#D92323 33.3%,#FCDC04 33.3% 66.6%,#000 66.6%)', flexShrink:0 }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* MODE 3: CAUCUS & RESOLUTION MANAGER (Mobile/Tablet Only) */}
+                                {activeTab === 'caucus' && !isDesktop && (
+                                    <section className="space-y-4">
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-4">
+                                            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                                <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider font-cinzel flex items-center gap-2">
+                                                    <i className="fa-solid fa-handshake"></i> Bloc Caucus Strategy
+                                                </h2>
+                                                <span className="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-mono">
+                                                    EchoMUN '26
+                                                </span>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                {motions.map((m, idx) => (
+                                                    <div key={m.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2 text-xs">
+                                                        <div className="flex justify-between items-center font-bold">
+                                                            <span className="text-amber-400 font-mono">Motion {idx + 1}: {m.type}</span>
+                                                            <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono text-[10px]">{m.totalTime}</span>
+                                                        </div>
+                                                        <p className="font-semibold text-slate-200 text-sm">"{m.title}"</p>
+                                                        <p className="text-slate-400 text-xs"><strong className="text-slate-300">Goal:</strong> {m.purpose}</p>
+                                                        <button
+                                                            onClick={() => copyToClipboard(`Delegate of Uganda moves for a ${m.type} of ${m.totalTime} with a ${m.speakerTime} speaker time on "${m.title}".`, `Motion ${idx + 1}`)}
+                                                            className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-700"
+                                                        >
+                                                            <i className="fa-regular fa-copy"></i> Copy Formal Motion Call
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-4">
+                                            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                                <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider font-cinzel flex items-center gap-2">
+                                                    <i className="fa-solid fa-file-signature text-red-500"></i> Operative Clauses
+                                                </h2>
+                                                <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">
+                                                    Working Paper
+                                                </span>
+                                            </div>
+
+                                            <div className="space-y-2.5">
+                                                {resolutions.map((r, idx) => (
+                                                    <div key={r.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5 text-xs">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-bold text-amber-400 font-mono">Clause {idx + 1}</span>
+                                                            <button
+                                                                onClick={() => copyToClipboard(`${r.prefix} ${r.text}`, `Clause ${idx + 1}`)}
+                                                                className="text-slate-400 hover:text-amber-400 text-[11px] flex items-center gap-1"
+                                                            >
+                                                                <i className="fa-regular fa-copy"></i> Copy Clause
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-slate-200 leading-relaxed">
+                                                            <strong className="underline decoration-amber-500 font-serif italic text-amber-300">{r.prefix}</strong> {r.text}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </section>
+                                )}
+
+                            </div>
+                        )}
+
+                    </main>
+                    
+                    {/* Bottom Mobile Sticky Action Bar */}
+                    {activeTab !== 'prompter' && (
+                        <div className="lg:hidden sticky bottom-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between gap-2 shadow-2xl no-print">
+                            <button
+                                onClick={() => setActiveTab('prompter')}
+                                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700 active:scale-95"
+                            >
+                                <i className="fa-solid fa-microphone-lines"></i>
+                                <span>Podium Mode</span>
+                            </button>
+
+                            <button
+                                onClick={() => copyToClipboard(speechText, "Speech text")}
+                                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700 active:scale-95"
+                            >
+                                <i className="fa-regular fa-copy text-amber-400"></i>
+                                <span>Copy</span>
+                            </button>
+
+                            <button
+                                onClick={downloadPDF}
+                                disabled={isGenerating}
+                                className="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 disabled:opacity-50"
+                            >
+                                {isGenerating ? (
+                                    <i className="fa-solid fa-circle-notch fa-spin"></i>
+                                ) : (
+                                    <i className="fa-solid fa-file-pdf"></i>
+                                )}
+                                <span>PDF Brief</span>
+                            </button>
+                        </div>
+                    )}
+
+                </div>
+            );
+        }
+
+        // Render React Application
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+
+</html>
